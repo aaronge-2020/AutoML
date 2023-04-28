@@ -1,6 +1,13 @@
 // Import the necessary libraries
 import * as Papa from "https://cdn.jsdelivr.net/npm/papaparse/+esm";
 import * as XLSX from "https://cdn.jsdelivr.net/npm/xlsx/+esm";
+import * as tfvis from "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis/+esm";
+
+// const backend = 'webgl'; // 'cpu' or 'wasm'
+//     const context = await navigator.ml.createContext();
+//     const tf = context.tf;
+//     await tf.setBackend(backend);
+//     await tf.ready();
 
 // Cache DOM elements for later use
 const fileInput = document.getElementById("fileInput");
@@ -10,7 +17,12 @@ const searchContainer = document.getElementById("searchContainer");
 // Listen for file input changes
 fileInput.addEventListener("change", handleFileUpload);
 
+let trainData = null;
+let labelData = null;
+
 function handleFileUpload(event) {
+  trainData = null;
+  labelData = null;
   const file = event.target.files[0];
   const fileType = file.type;
 
@@ -78,8 +90,12 @@ async function displayTable(data) {
     trainCheckbox.type = "radio";
     trainCheckbox.className = "train-radio ml-2";
     trainCheckbox.name = `column${columnIndex}`;
-
     trainCheckbox.dataset.columnIndex = columnIndex;
+
+    const trainLabel = document.createElement("div");
+    trainLabel.classList.add("inline-block");
+    trainLabel.appendChild(trainCheckbox);
+    trainLabel.appendChild(document.createTextNode("Train"));
 
     const labelRadio = document.createElement("input");
     labelRadio.type = "radio";
@@ -87,11 +103,17 @@ async function displayTable(data) {
     labelRadio.className = "label-radio ml-2";
     labelRadio.dataset.columnIndex = columnIndex;
 
-    headerCell.appendChild(trainCheckbox);
-    headerCell.appendChild(document.createTextNode("Train"));
-    headerCell.appendChild(labelRadio);
-    headerCell.appendChild(document.createTextNode("Label"));
+    const labelLabel = document.createElement("div");
+    labelLabel.classList.add("inline-block");
+    labelLabel.appendChild(labelRadio);
+    labelLabel.appendChild(document.createTextNode("Label"));
 
+    const radioContainer = document.createElement("div");
+    radioContainer.classList.add("ml-2");
+    radioContainer.appendChild(trainLabel);
+    radioContainer.appendChild(labelLabel);
+
+    headerCell.appendChild(radioContainer);
     headerRow.appendChild(headerCell);
   });
 
@@ -146,17 +168,19 @@ async function displayTable(data) {
       alert("Please select a column for the label");
       return;
     }
-    console.log(trainCheckboxes.length);
     if (trainCheckboxes.length == 0) {
-        alert("Please select a column for the train");
-        return;
-      }
+      alert("Please select a column for the train");
+      return;
+    }
     const { trainTensor, labelTensor } = await preprocessData(
       data,
       trainCheckboxes,
       labelRadio
     );
     // Do something with the preprocessed tensors (e.g., train a model, display the tensors, etc.)
+
+    trainData = trainTensor;
+    labelData = labelTensor;
     console.log(trainTensor, labelTensor);
   });
 
@@ -241,82 +265,150 @@ async function preprocessData(data, trainCheckboxes, labelRadio) {
   // Remove the header row and filter the selected columns
   const filteredData = data.slice(1).map((row) => {
     const newRow = [];
-    trainColumns.forEach((colIndex) => newRow.push(row[colIndex]));
-    newRow.push(row[labelColumn]);
+    trainColumns.forEach((colIndex) => newRow.push(parseFloat(row[colIndex])));
+
+    newRow.push(row[labelColumn].trim());
     return newRow;
   });
 
   // Convert the filtered data into tensors
-  const tensorData = tf.tensor2d(filteredData, [
-    filteredData.length,
-    trainColumns.length + 1,
-  ]);
-  const trainTensor = tensorData.slice(
-    [0, 0],
-    [filteredData.length, trainColumns.length]
-  );
-  const labelTensor = tensorData.slice(
-    [0, trainColumns.length],
-    [filteredData.length, 1]
-  );
+  const featuresArray = filteredData.map((row) => row.slice(0, -1));
+  const labelsArray = filteredData.map((row) => row.slice(-1)[0]);
 
-  return { trainTensor, labelTensor };
+  const featureTensor = tf.tensor2d(featuresArray);
+  const labelTensor = tf.tensor1d(labelsArray, "string");
+
+  // One-hot encode the labels
+  const uniqueLabels = Array.from(new Set(labelTensor.dataSync()));
+  const labelMap = new Map(uniqueLabels.map((label, index) => [label, index]));
+  const labelArray = labelsArray.map((label) => labelMap.get(label));
+  const encodedLabelTensor = tf.tensor1d(labelArray, "int32");
+
+  let oneHotLabelTensor;
+  if (uniqueLabels.length < 2) {
+    console.error(
+      "Error: At least two unique labels are required for one-hot encoding."
+    );
+    return;
+  } else {
+    oneHotLabelTensor = tf.oneHot(encodedLabelTensor, uniqueLabels.length);
+  }
+
+  return { trainTensor: featureTensor, labelTensor: oneHotLabelTensor };
 }
 
-document.getElementById('add-layer').addEventListener('click', () => {
-    const layerDiv = document.createElement('div');
-    layerDiv.classList.add('flex', 'items-center', 'space-x-2', 'layer-row');
-  
-    const label = document.createElement('span');
-    label.textContent = 'Layer:';
-  
-    const input = document.createElement('input');
-    input.type = 'number';
-    input.min = 1;
-    input.value = 10;
-    input.classList.add('py-1', 'px-2', 'border', 'border-gray-300', 'rounded-md', 'w-20');
-  
-    const deleteButton = document.createElement('button');
-    deleteButton.textContent = 'Delete';
-    deleteButton.classList.add('bg-red-500', 'hover:bg-red-700', 'text-white', 'font-bold', 'py-1', 'px-2', 'rounded');
-  
-    deleteButton.addEventListener('click', () => {
-      layerDiv.remove();
-    });
-  
-    layerDiv.appendChild(label);
-    layerDiv.appendChild(input);
-    layerDiv.appendChild(deleteButton);
-  
-    document.getElementById('layers-container').appendChild(layerDiv);
+document.getElementById("add-layer").addEventListener("click", () => {
+  const layerDiv = document.createElement("div");
+  layerDiv.classList.add("flex", "items-center", "space-x-2", "layer-row");
+
+  const label = document.createElement("span");
+  label.textContent = "Layer:";
+
+  const input = document.createElement("input");
+  input.type = "number";
+  input.min = 1;
+  input.value = 10;
+  input.classList.add(
+    "py-1",
+    "px-2",
+    "border",
+    "border-gray-300",
+    "rounded-md",
+    "w-20"
+  );
+
+  const deleteButton = document.createElement("button");
+  deleteButton.textContent = "Delete";
+  deleteButton.classList.add(
+    "bg-red-500",
+    "hover:bg-red-700",
+    "text-white",
+    "font-bold",
+    "py-1",
+    "px-2",
+    "rounded"
+  );
+
+  deleteButton.addEventListener("click", () => {
+    layerDiv.remove();
   });
-  
-  document.getElementById('train-model').addEventListener('click', async () => {
-    // Read the architecture from the form
-    const layers = Array.from(document.querySelectorAll('.layer-row input')).map(input => parseInt(input.value));
-  
-    // Create the model using the specified architecture
-    const model = tf.sequential();
-    model.add(tf.layers.dense({ units: layers[0], inputShape: [trainTensor.shape[1]], activation: 'relu' }));
-    for (let i = 1; i < layers.length; i++) {
-      model.add(tf.layers.dense({ units: layers[i], activation: 'relu' }));
-    }
-    model.add(tf.layers.dense({ units: 1 }));
-  
-    // Compile the model
-    model.compile({ optimizer: 'adam', loss: 'meanSquaredError', metrics: ['accuracy'] });
-  
-    // Train the model and display the training progress with TensorBoard (replace 'logs' with the desired log directory)
-    const logsDir = 'logs';
-    const tensorboardCallback = tf.callbacks.tensorBoard(logsDir, { updateFreq: 'batch' });
-  
-    await model.fit(trainTensor, labelTensor, {
-      epochs: 10,
-      batchSize: 32,
-      callbacks: [tensorboardCallback],
-    });
-  
-    // Do something with the trained model (e.g., make predictions, evaluate the model, etc.)
-    console.log('Model trained successfully');
+
+  layerDiv.appendChild(label);
+  layerDiv.appendChild(input);
+  layerDiv.appendChild(deleteButton);
+
+  document.getElementById("layers-container").appendChild(layerDiv);
+});
+
+document.getElementById("train-model").addEventListener("click", async () => {
+  // check if data is loaded
+  if (trainData == null || labelData == null) {
+    alert("Please load and preprocess data first");
+    return;
+  }
+
+  // Read the hyperparameters from the form
+  const learningRate = parseFloat(
+    document.getElementById("learning-rate").value
+  );
+  const batchSize = parseInt(document.getElementById("batch-size").value);
+  const epochs = parseInt(document.getElementById("epochs").value);
+  const activationFunction = document.getElementById(
+    "activation-function"
+  ).value;
+
+  // Read the architecture from the form and create the model using the specified architecture
+  const layers = Array.from(document.querySelectorAll(".layer-row input")).map(
+    (input) => parseInt(input.value)
+  );
+  const model = tf.sequential();
+  model.add(
+    tf.layers.dense({
+      units: layers[0],
+      inputShape: [trainData.shape[1]],
+      activation: activationFunction,
+    })
+  );
+  for (let i = 1; i < layers.length; i++) {
+    model.add(
+      tf.layers.dense({ units: layers[i], activation: activationFunction })
+    );
+  }
+  model.add(tf.layers.dense({ units: labelData.arraySync()[0].length }));
+
+  // Compile the model
+  const optimizer = tf.train.adam(learningRate);
+  model.compile({
+    optimizer: optimizer,
+    loss: "meanSquaredError",
+    metrics: ["accuracy"],
   });
-  
+
+  // Create a surface for loss and accuracy
+  const surface = tfvis.visor().surface({
+    name: "Loss and Accuracy",
+    tab: "Training",
+  });
+
+  // Initialize the metrics callbacks
+  const metrics = ["loss", "accuracy"];
+  const container = {
+    name: "Model Training",
+    styles: { height: "1000px" },
+  };
+  const callbacks = tfvis.default.show.fitCallbacks(
+    surface,
+    metrics,
+    container
+  );
+
+  // Fit the model
+  await model.fit(trainData, labelData, {
+    epochs: epochs,
+    batchSize: batchSize,
+    callbacks: callbacks,
+  });
+
+  // Do something with the trained model
+  console.log("Model trained successfully");
+});
