@@ -40,7 +40,6 @@ function createModelCard(modelName, modelType, lastTrained, modelTopology) {
     "rounded",
     "py-2",
     "px-4",
-    "mt-4",
     "hover:bg-blue-600"
   );
   loadModelButton.textContent = "Load and Test Model";
@@ -49,11 +48,43 @@ function createModelCard(modelName, modelType, lastTrained, modelTopology) {
     console.log("Loading and testing model...");
   });
 
+  const saveModelButton = document.createElement("button");
+  saveModelButton.classList.add(
+    "bg-gray-300",
+    "hover:bg-gray-400",
+    "text-gray-800",
+    "font-bold",
+    "py-2",
+    "px-4",
+    "rounded",
+    "inline-flex",
+    "items-center",
+  );
+  saveModelButton.innerHTML = `<svg class="fill-current w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z"/></svg>
+  <span>Download</span>`;
+
+  saveModelButton.addEventListener("click", () => {
+    // Add code here to load and test the model in another page
+    downloadModel(`localstorage://${modelName}`);
+  });
+
+  async function downloadModel(localStorageKey) {
+    const model = await tf.loadLayersModel(localStorageKey);
+    await model.save(`downloads://${localStorageKey.split("//")[1]}`);
+  }
+
   modelCard.appendChild(modelTitle);
   modelCard.appendChild(modelDesc);
   modelCard.appendChild(modelTop);
   modelCard.appendChild(lastTrainedText);
-  modelCard.appendChild(loadModelButton);
+
+  const buttonContainer = document.createElement("div");
+  buttonContainer.classList.add("flex", "flex-row", "justify-between", "mt-4");
+  buttonContainer.appendChild(loadModelButton);
+  buttonContainer.appendChild(saveModelButton);
+
+  modelCard.appendChild(buttonContainer);
+
   return modelCard;
 }
 
