@@ -42,7 +42,7 @@ function createModelCard(modelName, modelType, lastTrained, modelTopology) {
     "px-4",
     "hover:bg-blue-600"
   );
-  loadModelButton.textContent = "Load and Test Model";
+  loadModelButton.textContent = "Test Model";
   loadModelButton.addEventListener("click", () => {
     // Add code here to load and test the model in another page
     console.log("Loading and testing model...");
