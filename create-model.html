@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Model - AutoML App</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.12.0/dist/tf.min.js"></script>
+
 </head>
 
 <body>
@@ -41,19 +43,38 @@
         <div class="mb-6">
             <h2 class="text-xl font-bold mb-2">Upload Data</h2>
             <input type="file" id="fileInput" class="bg-white p-2 border rounded">
+            <div class="mt-6" id="searchContainer" style="display: none;">
+                <label class="block text-xl mb-2">Search:</label>
+                <input type="text" id="searchInput" class="border px-2 py-1 w-full" placeholder="Search dataset">
+            </div>
+
+            <div id="buttonsContainer" class="flex mt-6"></div>
             <div id="dataPreview" class="mt-2">
                 <!-- Data preview will be shown here -->
             </div>
+            <div id="processData"></div>
         </div>
 
         <!-- Model Settings -->
         <div class="mb-6">
             <h2 class="text-xl font-bold mb-2">Configure Model Settings</h2>
             <!-- Add form elements for configuring model settings -->
+            <div id="neural-network-form" class="mt-6">
+                <h3 class="text-xl font-bold mb-4">Neural Network Architecture</h3>
+                <div id="layers-container" class="space-y-2"></div>
+                <button id="add-layer"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4">
+                    Add Layer
+                </button>
+                <button id="train-model"
+                    class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4 ml-4">
+                    Train Model
+                </button>
+            </div>
+
+
         </div>
 
-        <!-- Train Model Button -->
-        <button class="bg-blue-600 text-white px-4 py-2 rounded font-bold" onclick="trainModel()">Train Model</button>
     </main>
 
     <script type="module" src="./scripts/create-model.js"></script>
