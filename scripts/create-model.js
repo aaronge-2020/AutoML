@@ -293,7 +293,7 @@ async function preprocessData(data, trainCheckboxes, labelRadio) {
   } else {
     oneHotLabelTensor = tf.oneHot(encodedLabelTensor, uniqueLabels.length);
   }
-
+  alertify.success('Dataset Preprocessed Successfully! :D');
   return { trainTensor: featureTensor, labelTensor: oneHotLabelTensor };
 }
 
@@ -410,5 +410,5 @@ document.getElementById("train-model").addEventListener("click", async () => {
   });
 
   // Do something with the trained model
-  console.log("Model trained successfully");
+  alertify.success('Model Trained Successfully! :D');
 });
