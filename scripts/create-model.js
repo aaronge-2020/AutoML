@@ -409,6 +409,11 @@ document.getElementById("train-model").addEventListener("click", async () => {
     callbacks: callbacks,
   });
 
+
+  // Save the trained model to local storage
+  const modelName = document.getElementById("fileInput").files[0].name.split(".")[0] + "_model"; // Choose a unique name for the model
+  await model.save(`localstorage://${modelName}`);
+
   // Do something with the trained model
-  alertify.success('Model Trained Successfully! :D');
+  alertify.success('Model Trained and Saved Successfully! :D');
 });
