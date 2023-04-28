@@ -347,6 +347,12 @@ document.getElementById("train-model").addEventListener("click", async () => {
     return;
   }
 
+  // Check if the number of layers is at least 1 
+  if (document.querySelectorAll(".layer-row").length < 1) {
+    alert("Please add at least one layer to the model");
+    return;
+  }
+
   // Read the hyperparameters from the form
   const learningRate = parseFloat(
     document.getElementById("learning-rate").value
@@ -369,6 +375,8 @@ document.getElementById("train-model").addEventListener("click", async () => {
       activation: activationFunction,
     })
   );
+
+
   for (let i = 1; i < layers.length; i++) {
     model.add(
       tf.layers.dense({ units: layers[i], activation: activationFunction })
