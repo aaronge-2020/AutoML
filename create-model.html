@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Model - AutoML App</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <nav class="bg-gray-800 p-4">
+            <div class="container mx-auto">
+                <div class="flex justify-between items-center">
+                    <a href="./index.html" class="text-white font-bold text-xl">AutoML App</a>
+                    <ul class="flex">
+                        <li class="mx-2"><a href="./test-model.html" class="text-white">Test Model</a></li>
+                        <li class="mx-2"><a href="./create-model.html" class="text-white">Create Model</a></li>
+                        <li class="mx-2"><a href="./advanced-setting.html" class="text-white">Settings</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-6">Create Model</h1>
+
+        <!-- Model Type Selection -->
+        <div class="mb-6">
+            <h2 class="text-xl font-bold mb-2">Select Model Type</h2>
+            <select class="bg-white p-2 border rounded">
+                <option value="image-classification">Image Classification</option>
+                <option value="text-classification">Text Classification</option>
+                <option value="regression">Regression</option>
+            </select>
+        </div>
+
+        <!-- Data Upload -->
+        <div class="mb-6">
+            <h2 class="text-xl font-bold mb-2">Upload Data</h2>
+            <input type="file" id="fileInput" class="bg-white p-2 border rounded">
+            <div id="dataPreview" class="mt-2">
+                <!-- Data preview will be shown here -->
+            </div>
+        </div>
+
+        <!-- Model Settings -->
+        <div class="mb-6">
+            <h2 class="text-xl font-bold mb-2">Configure Model Settings</h2>
+            <!-- Add form elements for configuring model settings -->
+        </div>
+
+        <!-- Train Model Button -->
+        <button class="bg-blue-600 text-white px-4 py-2 rounded font-bold" onclick="trainModel()">Train Model</button>
+    </main>
+
+    <script type="module" src="./scripts/create-model.js"></script>
+</body>
+
+</html>
