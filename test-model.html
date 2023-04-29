@@ -4,11 +4,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Model - AutoML App</title>
+    <title>TensorFlow.js Model Tester</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.12.0/dist/tf.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+
+    <style>
+        #inference-results {
+            position: relative;
+            max-height: 300px;
+            overflow-y: scroll;
+            padding-right: 1em;
+            /* Add padding for the scrollbar */
+        }
+
+        .copyButton {
+            font-size: 1.5em;
+            /* Adjust the button size */
+            padding: 5px 10px;
+            /* Add padding to the button */
+        }
+    </style>
+
 </head>
 
-<body>
+<body class="bg-gray-100">
     <header>
         <nav class="bg-gray-800 p-4">
             <div class="container mx-auto">
@@ -23,39 +43,57 @@
             </div>
         </nav>
     </header>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8">TensorFlow.js Model Tester</h1>
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">Model Upload</h2>
+            <div class="mb-4">
+                <label for="model-json-upload" class="block text-sm font-medium text-gray-700">Upload Model JSON</label>
+                <input type="file" name="model-json-upload" accept=".json" id="model-json" class="mt-2">
+                <br>
+                <label for="model-weights-upload" class="block text-sm font-medium text-gray-700">Upload Model
+                    Weights</label>
+                <input type="file" name="model-weights-upload" accept=".bin" id="model-weights" class="mt-2">
 
-    <main class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold mb-6">Test Model</h1>
-
-        <!-- Test Data Input -->
-        <div class="mb-6">
-            <h2 class="text-xl font-bold mb-2">Enter Test Data</h2>
-            <p class="mb-2">Input test data below to see the model's predictions:</p>
-            <!-- Add form elements for test data input -->
+            </div>
+            <button id="upload-model" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded">Upload
+                Model</button>
+            <div class="mt-2">
+                <span id="model-upload-status" class="text-sm text-gray-600">No model uploaded</span>
+            </div>
+            <!-- Optionally, add a dropdown menu for pre-trained models -->
         </div>
 
-        <!-- Model Predictions -->
-        <div class="mb-6">
-            <h2 class="text-xl font-bold mb-2">Model Predictions</h2>
-            <div id="predictions">
-                <!-- Model predictions will be displayed here -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">Data Upload</h2>
+            <div class="mb-4">
+                <label for="data-upload" class="block text-sm font-medium text-gray-700">Upload Test Data</label>
+                <input type="file" name="data-upload" id="data-upload" accept=".csv, .tsv" class="mt-2">
+            </div>
+            <button id="upload-data" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded">Upload Data</button>
+            <div class="mt-2">
+                <span id="data-upload-status" class="text-sm text-gray-600">No data uploaded</span>
             </div>
         </div>
 
-        <!-- Model Evaluation -->
-        <div class="mb-6">
-            <h2 class="text-xl font-bold mb-2">Model Evaluation</h2>
-            <p class="mb-2">Statistics about the model's accuracy and precision:</p>
-            <div id="evaluation">
-                <!-- Model evaluation statistics will be displayed here -->
+        <!-- Optionally, add a Model Configuration section -->
+
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">Model Testing</h2>
+            <button id="run-inference" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded mb-4">Run
+                Inference</button>
+            <div id="inference-results" class="text-sm text-gray-700">
+                <!-- Display inference results here -->
             </div>
+            <!-- Optionally, add a Download Results button -->
         </div>
 
-        <!-- Test Model Button -->
-        <button class="bg-blue-600 text-white px-4 py-2 rounded font-bold" onclick="testModel()">Test Model</button>
-    </main>
+        <!-- Add navigation and instructions -->
 
-    <script src="./scripts/test-model.js"></script>
+        <!-- Add error handling and feedback -->
+    </div>
 </body>
+
+<script type="module" src="./scripts/test-model.js"></script>
 
 </html>

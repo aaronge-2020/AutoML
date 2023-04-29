@@ -382,7 +382,7 @@ document.getElementById("train-model").addEventListener("click", async () => {
       tf.layers.dense({ units: layers[i], activation: activationFunction })
     );
   }
-  model.add(tf.layers.dense({ units: labelData.arraySync()[0].length }));
+  model.add(tf.layers.dense({ units: labelData.arraySync()[0].length, activation:"softmax"}));
 
   // Compile the model
   const optimizer = tf.train.adam(learningRate);
@@ -418,6 +418,9 @@ document.getElementById("train-model").addEventListener("click", async () => {
   });
 
 
+
+
+
   // Save the trained model to local storage
   const modelName = document.getElementById("fileInput").files[0].name.split(".")[0] + "_model"; // Choose a unique name for the model
   await model.save(`localstorage://${modelName}`);
@@ -425,3 +428,5 @@ document.getElementById("train-model").addEventListener("click", async () => {
   // Do something with the trained model
   alertify.success('Model Trained and Saved Successfully! :D');
 });
+
+

@@ -44,8 +44,10 @@ function createModelCard(modelName, modelType, lastTrained, modelTopology) {
   );
   loadModelButton.textContent = "Test Model";
   loadModelButton.addEventListener("click", () => {
-    // Add code here to load and test the model in another page
-    console.log("Loading and testing model...");
+    // Store the selected model name in sessionStorage
+    sessionStorage.setItem("selectedModelName", modelName);
+    // Redirect to the test-model.html page
+    window.location.href = "test-model.html";
   });
 
   const saveModelButton = document.createElement("button");
@@ -102,6 +104,17 @@ function loadModels() {
         .map((string) => string[1])
     )
   );
+
+
+  // Check if there are any models saved
+  if (uniqueModels.length === 0) {
+    const noModelsMessage = document.createElement("p");
+    noModelsMessage.classList.add("text-xl", "text-gray-600");
+    noModelsMessage.textContent = "No models saved yet!";
+    modelGrid.appendChild(noModelsMessage);
+    return;
+  }
+
 
   uniqueModels.forEach((model) => {
     const modelInfoKey = `tensorflowjs_models/${model}/info`;
