@@ -2,7 +2,7 @@
 const modelGrid = document.querySelector(".grid");
 
 // Function to create a model card
-function createModelCard(modelName, modelType, lastTrained, modelTopology) {
+function createModelCard(modelName, modelType, lastTrained, modelTopology, numbEpochs) {
   const modelCard = document.createElement("div");
   modelCard.classList.add("bg-white", "p-4", "rounded", "shadow");
 
@@ -12,6 +12,9 @@ function createModelCard(modelName, modelType, lastTrained, modelTopology) {
 
   const modelDesc = document.createElement("p");
   modelDesc.innerHTML = "<b>Model Type:</b> " + modelType;
+
+  const numberEpochs = document.createElement("div");
+  numberEpochs.innerHTML = "<b>Number of Epochs: </b>" + numbEpochs;
 
   const modelTop = document.createElement("div");
   modelTop.innerHTML = "<b>Model Topology:</b>";
@@ -77,8 +80,10 @@ function createModelCard(modelName, modelType, lastTrained, modelTopology) {
 
   modelCard.appendChild(modelTitle);
   modelCard.appendChild(modelDesc);
+  modelCard.appendChild(numberEpochs);
   modelCard.appendChild(modelTop);
   modelCard.appendChild(lastTrainedText);
+
 
   const buttonContainer = document.createElement("div");
   buttonContainer.classList.add("flex", "flex-row", "justify-between", "mt-4");
@@ -127,11 +132,15 @@ function loadModels() {
       localStorage.getItem(modelTopologyKey)
     );
 
+    const numbEpochs = JSON.parse(localStorage.getItem("model_epochs"))[model];
+
+
     const modelCard = createModelCard(
       modelName,
       modelType,
       lastTrained,
-      modelTopology
+      modelTopology,
+      numbEpochs
     );
     modelGrid.appendChild(modelCard);
   });

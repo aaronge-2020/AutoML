@@ -13,6 +13,7 @@ import * as tfvis from "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis/+esm";
 const fileInput = document.getElementById("fileInput");
 const dataPreview = document.getElementById("dataPreview");
 const searchContainer = document.getElementById("searchContainer");
+const visorToggleButton = document.getElementById("visor-toggle-button");
 
 // Listen for file input changes
 fileInput.addEventListener("change", handleFileUpload);
@@ -31,7 +32,7 @@ function handleFileUpload(event) {
     fileType === "text/csv" ||
     fileType === "application/vnd.ms-excel" ||
     fileType ===
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
   ) {
     let fileReader = new FileReader();
     fileReader.onload = function (e) {
@@ -48,7 +49,6 @@ function handleFileUpload(event) {
       }
     };
     fileReader.readAsBinaryString(file);
-    searchContainer.style.display = "block";
   } else {
     alert("Invalid file type. Please upload a CSV, TSV, or .xlsx file.");
   }
@@ -341,6 +341,8 @@ document.getElementById("add-layer").addEventListener("click", () => {
 });
 
 document.getElementById("train-model").addEventListener("click", async () => {
+
+
   // check if data is loaded
   if (trainData == null || labelData == null) {
     alert("Please load and preprocess data first");
@@ -382,7 +384,7 @@ document.getElementById("train-model").addEventListener("click", async () => {
       tf.layers.dense({ units: layers[i], activation: activationFunction })
     );
   }
-  model.add(tf.layers.dense({ units: labelData.arraySync()[0].length, activation:"softmax"}));
+  model.add(tf.layers.dense({ units: labelData.arraySync()[0].length, activation: "softmax" }));
 
   // Compile the model
   const optimizer = tf.train.adam(learningRate);
@@ -410,6 +412,9 @@ document.getElementById("train-model").addEventListener("click", async () => {
     container
   );
 
+  searchContainer.style.display = "block";
+
+
   // Fit the model
   await model.fit(trainData, labelData, {
     epochs: epochs,
@@ -417,16 +422,56 @@ document.getElementById("train-model").addEventListener("click", async () => {
     callbacks: callbacks,
   });
 
-
-
-
-
   // Save the trained model to local storage
   const modelName = document.getElementById("fileInput").files[0].name.split(".")[0] + "_model"; // Choose a unique name for the model
   await model.save(`localstorage://${modelName}`);
+
+  if (localStorage.getItem("model_epochs") === null) {
+    // Create a new dictionary if it doesn't exist
+    localStorage.setItem("model_epochs", JSON.stringify({}));
+  }
+  updateModelEpochs(modelName, epochs);
+
+  // showPerClassAccuracy(model, trainData, labelData);
+  // showConfusionMatrix(model, trainData, labelData);
+
+  const labels = tf.tensor1d([0, 0, 1, 2, 2, 2]);
+const predictions = tf.tensor1d([0, 0, 0, 2, 1, 1]);
+
+const result = await tfvis.metrics.perClassAccuracy(labels, predictions);
 
   // Do something with the trained model
   alertify.success('Model Trained and Saved Successfully! :D');
 });
 
+async function showConfusionMatrix(model, data, labels) {
+  const predictions = model.predict(data).argMax([-1]);
+  const classAccuracy = await tfvis.metrics.perClassAccuracy(tf.tensor1d(labels.argMax([-1]).arraySync()), tf.tensor1d(predictions.arraySync()));
+  const container = {name: 'Confusion Matrix', tab: 'Evaluation'};
+  tfvis.render.confusionMatrix(container, {values: classAccuracy});
+}
 
+// Add the number of epochs trained by your model to the dictionary
+function updateModelEpochs(modelName, epochs) {
+  let modelEpochs = JSON.parse(localStorage.getItem("model_epochs"));
+  modelEpochs[modelName] = epochs;
+  localStorage.setItem("model_epochs", JSON.stringify(modelEpochs));
+}
+
+async function showPerClassAccuracy(model, data, labels) {
+  const predictions = model.predict(data).argMax([-1]);
+  const classAccuracy = await tfvis.metrics.perClassAccuracy(tf.tensor1d(labels.argMax([-1]).arraySync()), tf.tensor1d(predictions.arraySync()));
+  const container = {name: 'Per-Class Accuracy', tab: 'Evaluation'};
+  tfvis.show.perClassAccuracy(container, classAccuracy);
+}
+
+
+visorToggleButton.addEventListener("click", () => {
+  if (tfvis.visor().isOpen()) {
+    tfvis.visor().close();
+    visorToggleButton.textContent = "Toggle Visor";
+  } else {
+    tfvis.visor().open();
+    visorToggleButton.textContent = "Toggle Visor";
+  }
+});

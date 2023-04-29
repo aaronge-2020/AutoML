@@ -11,7 +11,7 @@
     <script src="
     https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js
     "></script>
-        <link href="
+    <link href="
     https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css
     " rel="stylesheet">
 </head>
@@ -50,8 +50,9 @@
             <h2 class="text-xl font-bold mb-2">Upload Data</h2>
             <input type="file" id="fileInput" class="bg-white p-2 border rounded">
             <br>
-            <a href="./Algerian_forest_fires_dataset_UPDATE.csv" download="Algerian_forest_fires_dataset.csv" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Download Example Dataset</a>
-            
+            <a href="./Algerian_forest_fires_dataset_UPDATE.csv" download="Algerian_forest_fires_dataset.csv"
+                class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Download Example Dataset</a>
+
             <div class="mt-6" id="searchContainer" style="display: none;">
                 <label class="block text-xl mb-2">Search:</label>
                 <input type="text" id="searchInput" class="border px-2 py-1 w-full" placeholder="Search dataset">
@@ -62,37 +63,47 @@
                 <!-- Data preview will be shown here -->
             </div>
             <div id="processData"></div>
+
         </div>
 
         <!-- Model Settings -->
         <div class="mb-6">
+            <button id="visor-toggle-button" style="display:none;"
+                class="absolute top-20 right-0 mt-4 mr-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Toggle Visor
+            </button>
+
             <h2 class="text-xl font-bold mb-2">Configure Model Settings</h2>
             <div id="hyperparameters-form" class="mt-6">
                 <h3 class="text-xl font-bold mb-4">Hyperparameters</h3>
                 <div class="grid grid-cols-2 gap-4">
-                  <label class="block">
-                    <span class="text-gray-700">Learning Rate</span>
-                    <input id="learning-rate" class="mt-1 block w-full py-1 px-2 border border-gray-300 rounded-md" type="number" value="0.001" step="0.001" min="0">
-                  </label>
-                  <label class="block">
-                    <span class="text-gray-700">Batch Size</span>
-                    <input id="batch-size" class="mt-1 block w-full py-1 px-2 border border-gray-300 rounded-md" type="number" value="32" min="1">
-                  </label>
-                  <label class="block">
-                    <span class="text-gray-700">Epochs</span>
-                    <input id="epochs" class="mt-1 block w-full py-1 px-2 border border-gray-300 rounded-md" type="number" value="10" min="1">
-                  </label>
-                  <label class="block">
-                    <span class="text-gray-700">Activation Function</span>
-                    <select id="activation-function" class="mt-1 block w-full py-1 px-2 border border-gray-300 rounded-md">
-                      <option value="relu">ReLU</option>
-                      <option value="sigmoid">Sigmoid</option>
-                      <option value="tanh">Tanh</option>
-                    </select>
-                  </label>
+                    <label class="block">
+                        <span class="text-gray-700">Learning Rate</span>
+                        <input id="learning-rate" class="mt-1 block w-full py-1 px-2 border border-gray-300 rounded-md"
+                            type="number" value="0.001" step="0.001" min="0">
+                    </label>
+                    <label class="block">
+                        <span class="text-gray-700">Batch Size</span>
+                        <input id="batch-size" class="mt-1 block w-full py-1 px-2 border border-gray-300 rounded-md"
+                            type="number" value="32" min="1">
+                    </label>
+                    <label class="block">
+                        <span class="text-gray-700">Epochs</span>
+                        <input id="epochs" class="mt-1 block w-full py-1 px-2 border border-gray-300 rounded-md"
+                            type="number" value="10" min="1">
+                    </label>
+                    <label class="block">
+                        <span class="text-gray-700">Activation Function</span>
+                        <select id="activation-function"
+                            class="mt-1 block w-full py-1 px-2 border border-gray-300 rounded-md">
+                            <option value="relu">ReLU</option>
+                            <option value="sigmoid">Sigmoid</option>
+                            <option value="tanh">Tanh</option>
+                        </select>
+                    </label>
                 </div>
-              </div>
-              
+            </div>
+
 
             <!-- Add form elements for configuring model settings -->
             <div id="neural-network-form" class="mt-6">
