@@ -432,37 +432,15 @@ document.getElementById("train-model").addEventListener("click", async () => {
   }
   updateModelEpochs(modelName, epochs);
 
-  // showPerClassAccuracy(model, trainData, labelData);
-  // showConfusionMatrix(model, trainData, labelData);
-
-  const labels = tf.tensor1d([0, 0, 1, 2, 2, 2]);
-const predictions = tf.tensor1d([0, 0, 0, 2, 1, 1]);
-
-const result = await tfvis.metrics.perClassAccuracy(labels, predictions);
-
   // Do something with the trained model
   alertify.success('Model Trained and Saved Successfully! :D');
 });
-
-async function showConfusionMatrix(model, data, labels) {
-  const predictions = model.predict(data).argMax([-1]);
-  const classAccuracy = await tfvis.metrics.perClassAccuracy(tf.tensor1d(labels.argMax([-1]).arraySync()), tf.tensor1d(predictions.arraySync()));
-  const container = {name: 'Confusion Matrix', tab: 'Evaluation'};
-  tfvis.render.confusionMatrix(container, {values: classAccuracy});
-}
 
 // Add the number of epochs trained by your model to the dictionary
 function updateModelEpochs(modelName, epochs) {
   let modelEpochs = JSON.parse(localStorage.getItem("model_epochs"));
   modelEpochs[modelName] = epochs;
   localStorage.setItem("model_epochs", JSON.stringify(modelEpochs));
-}
-
-async function showPerClassAccuracy(model, data, labels) {
-  const predictions = model.predict(data).argMax([-1]);
-  const classAccuracy = await tfvis.metrics.perClassAccuracy(tf.tensor1d(labels.argMax([-1]).arraySync()), tf.tensor1d(predictions.arraySync()));
-  const container = {name: 'Per-Class Accuracy', tab: 'Evaluation'};
-  tfvis.show.perClassAccuracy(container, classAccuracy);
 }
 
 
