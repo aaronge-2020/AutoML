@@ -69,7 +69,11 @@
             <div class="mb-4">
                 <label for="data-upload" class="block text-sm font-medium text-gray-700">Upload Test Data</label>
                 <input type="file" name="data-upload" id="data-upload" accept=".csv, .tsv" class="mt-2">
+                <br>
+                <a href="./test_data.csv" download="test_data.csv"
+                class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Download Example Test Data</a>
             </div>
+            
             <button id="upload-data" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded">Upload Data</button>
             <div class="mt-2">
                 <span id="data-upload-status" class="text-sm text-gray-600">No data uploaded</span>

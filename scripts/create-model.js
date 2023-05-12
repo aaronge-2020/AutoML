@@ -20,6 +20,7 @@ fileInput.addEventListener("change", handleFileUpload);
 
 let trainData = null;
 let labelData = null;
+let classNames = null;
 
 function handleFileUpload(event) {
   trainData = null;
@@ -265,55 +266,6 @@ function handleSearch(event) {
   });
 }
 
-// async function preprocessData(data, trainCheckboxes, labelRadio) {
-//   const trainColumns = [];
-//   const labelColumn = parseInt(labelRadio.dataset.columnIndex);
-
-//   trainCheckboxes.forEach((checkbox) => {
-//     if (checkbox.checked) {
-//       trainColumns.push(parseInt(checkbox.dataset.columnIndex));
-//     }
-//   });
-
-//   if (trainColumns.length === 0 || isNaN(labelColumn)) {
-//     console.error("No columns selected for training or label");
-//     return;
-//   }
-
-//   // Remove the header row and filter the selected columns
-//   const filteredData = data.slice(1).map((row) => {
-//     const newRow = [];
-//     trainColumns.forEach((colIndex) => newRow.push(parseFloat(row[colIndex])));
-
-//     newRow.push(row[labelColumn].trim());
-//     return newRow;
-//   });
-
-//   // Convert the filtered data into tensors
-//   const featuresArray = filteredData.map((row) => row.slice(0, -1));
-//   const labelsArray = filteredData.map((row) => row.slice(-1)[0]);
-
-//   const featureTensor = tf.tensor2d(featuresArray);
-//   const labelTensor = tf.tensor1d(labelsArray, "string");
-
-//   // One-hot encode the labels
-//   const uniqueLabels = Array.from(new Set(labelTensor.dataSync()));
-//   const labelMap = new Map(uniqueLabels.map((label, index) => [label, index]));
-//   const labelArray = labelsArray.map((label) => labelMap.get(label));
-//   const encodedLabelTensor = tf.tensor1d(labelArray, "int32");
-
-//   let oneHotLabelTensor;
-//   if (uniqueLabels.length < 2) {
-//     console.error(
-//       "Error: At least two unique labels are required for one-hot encoding."
-//     );
-//     return;
-//   } else {
-//     oneHotLabelTensor = tf.oneHot(encodedLabelTensor, uniqueLabels.length);
-//   }
-//   alertify.success('Dataset Preprocessed Successfully! :D');
-//   return { trainTensor: featureTensor, labelTensor: oneHotLabelTensor };
-// }
 async function preprocessData(data, trainCheckboxes, labelRadio) {
   const trainColumns = [];
   const labelColumn = parseInt(labelRadio.dataset.columnIndex);
@@ -330,7 +282,7 @@ async function preprocessData(data, trainCheckboxes, labelRadio) {
   }
 
   data = data.filter((row) => {
-    return row.every((value) => value !='');
+    return row.every((value) => value != "");
   });
 
   // Remove the header row and filter the selected columns
@@ -341,9 +293,7 @@ async function preprocessData(data, trainCheckboxes, labelRadio) {
       const cell = row[colIndex];
       const parsedValue = parseFloat(cell);
 
-      const columnValues = data
-        .slice(1)
-        .map((row) => row[colIndex]);
+      const columnValues = data.slice(1).map((row) => row[colIndex]);
       const allNumeric = columnValues.every((value) => !isNaN(value));
 
       if (!allNumeric) {
@@ -363,7 +313,6 @@ async function preprocessData(data, trainCheckboxes, labelRadio) {
 
     newRow.push(row[labelColumn].trim());
     return newRow;
-
   });
 
   // Convert the filtered data into tensors
@@ -375,6 +324,7 @@ async function preprocessData(data, trainCheckboxes, labelRadio) {
 
   // One-hot encode the labels
   const uniqueLabels = Array.from(new Set(labelTensor.dataSync()));
+  classNames = uniqueLabels;
   const labelMap = new Map(uniqueLabels.map((label, index) => [label, index]));
   const labelArray = labelsArray.map((label) => labelMap.get(label));
   const encodedLabelTensor = tf.tensor1d(labelArray, "int32");
@@ -436,6 +386,7 @@ document.getElementById("add-layer").addEventListener("click", () => {
 });
 
 document.getElementById("train-model").addEventListener("click", async () => {
+  visorToggleButton.style.display = "block";
   // check if data is loaded
   if (trainData == null || labelData == null) {
     alert("Please load and preprocess data first");
@@ -527,17 +478,26 @@ document.getElementById("train-model").addEventListener("click", async () => {
     // Create a new dictionary if it doesn't exist
     localStorage.setItem("model_epochs", JSON.stringify({}));
   }
-  updateModelEpochs(modelName, epochs);
+  if (localStorage.getItem("class_names") === null) {
+    // Create a new dictionary if it doesn't exist
+    localStorage.setItem("class_names", JSON.stringify({}));
+  }
+
+  updateModelEpochsAndClassName(modelName, epochs, classNames);
 
   // Do something with the trained model
   alertify.success("Model Trained and Saved Successfully! :D");
 });
 
 // Add the number of epochs trained by your model to the dictionary
-function updateModelEpochs(modelName, epochs) {
+function updateModelEpochsAndClassName(modelName, epochs, className) {
   let modelEpochs = JSON.parse(localStorage.getItem("model_epochs"));
   modelEpochs[modelName] = epochs;
   localStorage.setItem("model_epochs", JSON.stringify(modelEpochs));
+
+  let class_names = JSON.parse(localStorage.getItem("class_names"));
+  class_names[modelName] = className;
+  localStorage.setItem("class_names", JSON.stringify(class_names));
 }
 
 visorToggleButton.addEventListener("click", () => {

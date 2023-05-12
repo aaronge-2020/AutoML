@@ -1,44 +1,8 @@
-import * as Papa from "https://cdn.jsdelivr.net/npm/papaparse/+esm";
-import { parseCSV, parseXLSX, parseTSV } from "./preprocessing.js";
+import { parseCSV, parseTSV } from "./preprocessing.js";
 
 let testedModel = null;
 let testedData = null;
-
-async function showAccuracyAndConfusionMatrix(model, data, classNames) {
-    const [preds, labels] = tf.tidy(() => {
-        const preds = model.predict(data.xs);
-        const labels = data.ys.argMax([-1]);
-        return [preds.argMax([-1]), labels];
-    });
-
-    const classAccuracy = await tfvis.metrics.perClassAccuracy(labels, preds);
-    const container = { name: 'Accuracy', tab: 'Evaluation' };
-    tfvis.show.perClassAccuracy(container, classAccuracy, classNames);
-
-    const confusionMatrix = await tfvis.metrics.confusionMatrix(labels, preds);
-    const container2 = { name: 'Confusion Matrix', tab: 'Evaluation' };
-    tfvis.render.confusionMatrix(container2, { values: confusionMatrix }, classNames);
-
-    labels.dispose();
-}
-
-// // Retrieve the selected model name from sessionStorage
-// const selectedModelName = sessionStorage.getItem("selectedModelName");
-
-// // Display the selected model name on the page
-// const modelInfoDiv = document.getElementById("model-info");
-// modelInfoDiv.textContent = `Testing model: ${selectedModelName}`;
-
-// // Load the model for testing
-// async function loadModel() {
-// const model = await tf.loadLayersModel(`localstorage://${selectedModelName}`);
-// // Perform testing with the loaded model here
-
-// }
-
-
-// // Call the loadModel function to load the model for testing
-// loadModel();
+let classLabels = null;
 
 document.addEventListener("DOMContentLoaded", async function () {
     const uploadJSONInput = document.getElementById('model-json');
@@ -143,10 +107,17 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     
         try {
+            const classNames = JSON.parse(localStorage.getItem("class_names"))[sessionStorage.getItem("selectedModelName")];
+            
             const predictions = testedModel.predict(testedData);
-            const formattedPredictions = JSON.stringify(predictions.arraySync(), null, 2);
+            const formattedPredictions = predictions.arraySync()[0]
     
             // Display the results in the inferenceResults element
+            // Loop through the classNames and add the class name to the formattedPredictions
+            for (let i = 0; i < classNames.length; i++) {
+                formattedPredictions[i] = classNames[i] + ": " + formattedPredictions[i] + "\n";
+            }
+    
             inferenceResults.innerHTML = '<pre>Inference results:\n' + formattedPredictions + '</pre>';
     
             // Create a copy button with clipboard icon
