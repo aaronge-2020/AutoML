@@ -32,7 +32,7 @@ function handleFileUpload(event) {
     fileType === "text/csv" ||
     fileType === "application/vnd.ms-excel" ||
     fileType ===
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
   ) {
     let fileReader = new FileReader();
     fileReader.onload = function (e) {
@@ -108,12 +108,30 @@ async function displayTable(data) {
     labelLabel.appendChild(labelRadio);
     labelLabel.appendChild(document.createTextNode("Label"));
 
+    // Create another radio button for that allows the user to choose to ignore the column
+    const ignoreRadio = document.createElement("input");
+    ignoreRadio.type = "radio";
+    ignoreRadio.name = `column${columnIndex}`;
+    ignoreRadio.className = "ignore-radio ml-2";
+    ignoreRadio.dataset.columnIndex = columnIndex;
+
+    // Create the label for the ignore radio button
+    const ignoreLabel = document.createElement("div");
+    ignoreLabel.classList.add("inline-block");
+    ignoreLabel.appendChild(ignoreRadio);
+    ignoreLabel.appendChild(document.createTextNode("Ignore"));
+
     const radioContainer = document.createElement("div");
     radioContainer.classList.add("ml-2");
     radioContainer.appendChild(trainLabel);
     radioContainer.appendChild(labelLabel);
+    radioContainer.appendChild(ignoreLabel);
+    // Adjust the width of the header cell to display radio buttons in a single row
+    radioContainer.style.width = "200px";
+    radioContainer.style.marginLeft = "0px";
 
     headerCell.appendChild(radioContainer);
+
     headerRow.appendChild(headerCell);
   });
 
@@ -247,6 +265,55 @@ function handleSearch(event) {
   });
 }
 
+// async function preprocessData(data, trainCheckboxes, labelRadio) {
+//   const trainColumns = [];
+//   const labelColumn = parseInt(labelRadio.dataset.columnIndex);
+
+//   trainCheckboxes.forEach((checkbox) => {
+//     if (checkbox.checked) {
+//       trainColumns.push(parseInt(checkbox.dataset.columnIndex));
+//     }
+//   });
+
+//   if (trainColumns.length === 0 || isNaN(labelColumn)) {
+//     console.error("No columns selected for training or label");
+//     return;
+//   }
+
+//   // Remove the header row and filter the selected columns
+//   const filteredData = data.slice(1).map((row) => {
+//     const newRow = [];
+//     trainColumns.forEach((colIndex) => newRow.push(parseFloat(row[colIndex])));
+
+//     newRow.push(row[labelColumn].trim());
+//     return newRow;
+//   });
+
+//   // Convert the filtered data into tensors
+//   const featuresArray = filteredData.map((row) => row.slice(0, -1));
+//   const labelsArray = filteredData.map((row) => row.slice(-1)[0]);
+
+//   const featureTensor = tf.tensor2d(featuresArray);
+//   const labelTensor = tf.tensor1d(labelsArray, "string");
+
+//   // One-hot encode the labels
+//   const uniqueLabels = Array.from(new Set(labelTensor.dataSync()));
+//   const labelMap = new Map(uniqueLabels.map((label, index) => [label, index]));
+//   const labelArray = labelsArray.map((label) => labelMap.get(label));
+//   const encodedLabelTensor = tf.tensor1d(labelArray, "int32");
+
+//   let oneHotLabelTensor;
+//   if (uniqueLabels.length < 2) {
+//     console.error(
+//       "Error: At least two unique labels are required for one-hot encoding."
+//     );
+//     return;
+//   } else {
+//     oneHotLabelTensor = tf.oneHot(encodedLabelTensor, uniqueLabels.length);
+//   }
+//   alertify.success('Dataset Preprocessed Successfully! :D');
+//   return { trainTensor: featureTensor, labelTensor: oneHotLabelTensor };
+// }
 async function preprocessData(data, trainCheckboxes, labelRadio) {
   const trainColumns = [];
   const labelColumn = parseInt(labelRadio.dataset.columnIndex);
@@ -262,13 +329,41 @@ async function preprocessData(data, trainCheckboxes, labelRadio) {
     return;
   }
 
+  data = data.filter((row) => {
+    return row.every((value) => value !='');
+  });
+
   // Remove the header row and filter the selected columns
   const filteredData = data.slice(1).map((row) => {
     const newRow = [];
-    trainColumns.forEach((colIndex) => newRow.push(parseFloat(row[colIndex])));
+
+    trainColumns.forEach((colIndex) => {
+      const cell = row[colIndex];
+      const parsedValue = parseFloat(cell);
+
+      const columnValues = data
+        .slice(1)
+        .map((row) => row[colIndex]);
+      const allNumeric = columnValues.every((value) => !isNaN(value));
+
+      if (!allNumeric) {
+        const uniqueValues = Array.from(
+          new Set(data.slice(1).map((r) => r[colIndex]))
+        );
+        const valueIndex = uniqueValues.indexOf(cell);
+        const oneHotVector = Array.from(
+          { length: uniqueValues.length },
+          (_, i) => (i === valueIndex ? 1 : 0)
+        );
+        newRow.push(...oneHotVector);
+      } else {
+        newRow.push(parsedValue);
+      }
+    });
 
     newRow.push(row[labelColumn].trim());
     return newRow;
+
   });
 
   // Convert the filtered data into tensors
@@ -293,7 +388,7 @@ async function preprocessData(data, trainCheckboxes, labelRadio) {
   } else {
     oneHotLabelTensor = tf.oneHot(encodedLabelTensor, uniqueLabels.length);
   }
-  alertify.success('Dataset Preprocessed Successfully! :D');
+  alertify.success("Dataset Preprocessed Successfully! :D");
   return { trainTensor: featureTensor, labelTensor: oneHotLabelTensor };
 }
 
@@ -341,15 +436,13 @@ document.getElementById("add-layer").addEventListener("click", () => {
 });
 
 document.getElementById("train-model").addEventListener("click", async () => {
-
-
   // check if data is loaded
   if (trainData == null || labelData == null) {
     alert("Please load and preprocess data first");
     return;
   }
 
-  // Check if the number of layers is at least 1 
+  // Check if the number of layers is at least 1
   if (document.querySelectorAll(".layer-row").length < 1) {
     alert("Please add at least one layer to the model");
     return;
@@ -378,13 +471,17 @@ document.getElementById("train-model").addEventListener("click", async () => {
     })
   );
 
-
   for (let i = 1; i < layers.length; i++) {
     model.add(
       tf.layers.dense({ units: layers[i], activation: activationFunction })
     );
   }
-  model.add(tf.layers.dense({ units: labelData.arraySync()[0].length, activation: "softmax" }));
+  model.add(
+    tf.layers.dense({
+      units: labelData.arraySync()[0].length,
+      activation: "softmax",
+    })
+  );
 
   // Compile the model
   const optimizer = tf.train.adam(learningRate);
@@ -414,7 +511,6 @@ document.getElementById("train-model").addEventListener("click", async () => {
 
   searchContainer.style.display = "block";
 
-
   // Fit the model
   await model.fit(trainData, labelData, {
     epochs: epochs,
@@ -423,7 +519,8 @@ document.getElementById("train-model").addEventListener("click", async () => {
   });
 
   // Save the trained model to local storage
-  const modelName = document.getElementById("fileInput").files[0].name.split(".")[0] + "_model"; // Choose a unique name for the model
+  const modelName =
+    document.getElementById("fileInput").files[0].name.split(".")[0] + "_model"; // Choose a unique name for the model
   await model.save(`localstorage://${modelName}`);
 
   if (localStorage.getItem("model_epochs") === null) {
@@ -433,7 +530,7 @@ document.getElementById("train-model").addEventListener("click", async () => {
   updateModelEpochs(modelName, epochs);
 
   // Do something with the trained model
-  alertify.success('Model Trained and Saved Successfully! :D');
+  alertify.success("Model Trained and Saved Successfully! :D");
 });
 
 // Add the number of epochs trained by your model to the dictionary
@@ -442,7 +539,6 @@ function updateModelEpochs(modelName, epochs) {
   modelEpochs[modelName] = epochs;
   localStorage.setItem("model_epochs", JSON.stringify(modelEpochs));
 }
-
 
 visorToggleButton.addEventListener("click", () => {
   if (tfvis.visor().isOpen()) {
